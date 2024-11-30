@@ -78,9 +78,9 @@ impl fmt::Display for IROperand {
 }
 
 #[derive(Debug)]
-pub struct IRCall<'bump> {
+pub struct IRCall<'arena> {
     opcode: &'static str,
-    operands: &'bump mut [IROperand],
+    operands: &'arena mut [IROperand],
 }
 
 impl fmt::Display for IRCall<'_> {
@@ -94,9 +94,9 @@ impl fmt::Display for IRCall<'_> {
 }
 
 #[derive(Debug)]
-pub enum IRExpr<'bump> {
+pub enum IRExpr<'arena> {
     Var(IRVariable),
-    Call(IRCall<'bump>),
+    Call(IRCall<'arena>),
     Literal(IRLiteral),
 }
 
@@ -111,9 +111,9 @@ impl fmt::Display for IRExpr<'_> {
 }
 
 #[derive(Debug)]
-pub struct IRAssignment<'bump> {
+pub struct IRAssignment<'arena> {
     to: IRVariable,
-    expr: IRExpr<'bump>,
+    expr: IRExpr<'arena>,
 }
 
 impl fmt::Display for IRAssignment<'_> {
@@ -123,9 +123,9 @@ impl fmt::Display for IRAssignment<'_> {
 }
 
 #[derive(Debug)]
-pub enum IRStatement<'bump> {
-    Call(IRCall<'bump>),
-    Assignment(IRAssignment<'bump>),
+pub enum IRStatement<'arena> {
+    Call(IRCall<'arena>),
+    Assignment(IRAssignment<'arena>),
 }
 
 impl fmt::Display for IRStatement<'_> {
@@ -138,9 +138,9 @@ impl fmt::Display for IRStatement<'_> {
 }
 
 #[derive(Debug)]
-pub struct IRBasicBlock<'bump> {
+pub struct IRBasicBlock<'arena> {
     label: IRLabel,
-    statements: BVec<'bump, IRStatement<'bump>>,
+    statements: BVec<'arena, IRStatement<'arena>>,
 }
 
 const NATURAL_INDENT: &'static str = "    ";
@@ -172,9 +172,9 @@ impl fmt::Display for IRBasicBlock<'_> {
 }
 
 #[derive(Debug)]
-pub struct IRFunction<'bump> {
+pub struct IRFunction<'arena> {
     label: IRLabel,
-    bbs: BVec<'bump, IRBasicBlock<'bump>>,
+    bbs: BVec<'arena, IRBasicBlock<'arena>>,
 }
 
 impl fmt::Display for IRFunction<'_> {
@@ -189,9 +189,9 @@ impl fmt::Display for IRFunction<'_> {
 }
 
 #[derive(Debug)]
-pub struct IR<'bump> {
-    functions: BVec<'bump, IRFunction<'bump>>,
-    data_section: BVec<'bump, IRCall<'bump>>,
+pub struct IR<'arena> {
+    functions: BVec<'arena, IRFunction<'arena>>,
+    data_section: BVec<'arena, IRCall<'arena>>,
 }
 
 impl fmt::Display for IR<'_> {
