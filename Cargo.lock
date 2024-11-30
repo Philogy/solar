@@ -3179,6 +3179,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
+name = "venom-rs"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "bumpalo",
+ "itertools 0.10.5",
+]
+
+[[package]]
 name = "vergen"
 version = "8.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
