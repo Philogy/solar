@@ -1,20 +1,17 @@
 use alloy_primitives::U256;
 use bumpalo::collections::Vec as BVec;
 use itertools::Itertools;
+use solar_data_structures::newtype_index;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct IRVariable(u32);
-
-impl IRVariable {
-    pub fn new(value: u32) -> Self {
-        Self(value)
-    }
+newtype_index! {
+    pub struct IRVariable;
+    pub struct IRLabel;
 }
 
 impl fmt::Display for IRVariable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "%{}", self.0)
+        write!(f, "%{}", self.get())
     }
 }
 
@@ -29,22 +26,13 @@ impl From<U256> for IRLiteral {
 
 impl fmt::Display for IRLiteral {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.to_string())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct IRLabel(u32);
-
-impl IRLabel {
-    pub fn new(value: u32) -> Self {
-        Self(value)
+        write!(f, "{}", self.0)
     }
 }
 
 impl fmt::Display for IRLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "@{}", self.0)
+        write!(f, "@{}", self.get())
     }
 }
 
@@ -95,7 +83,6 @@ impl fmt::Display for IRCall<'_> {
 
 #[derive(Debug)]
 pub enum IRExpr<'arena> {
-    Var(IRVariable),
     Call(IRCall<'arena>),
     Literal(IRLiteral),
 }
@@ -103,7 +90,6 @@ pub enum IRExpr<'arena> {
 impl fmt::Display for IRExpr<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Var(var) => var.fmt(f),
             Self::Call(call) => call.fmt(f),
             Self::Literal(literal) => literal.fmt(f),
         }
@@ -148,9 +134,9 @@ const NATURAL_INDENT: &'static str = "    ";
 impl IRBasicBlock<'_> {
     fn to_indented_string(&self, nested: bool) -> String {
         let mut s = if nested {
-            format!("{NATURAL_INDENT}{}:\n", self.label.0)
+            format!("{NATURAL_INDENT}{}:\n", self.label.get())
         } else {
-            format!("{}:\n", self.label.0)
+            format!("{}:\n", self.label.get())
         };
         let indent = if nested {
             format!("{NATURAL_INDENT}{NATURAL_INDENT}")
@@ -181,8 +167,8 @@ impl fmt::Display for IRFunction<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "fn {} => {{\n{}\n}}",
-            self.label.0,
+            "function {} => \n{}\n",
+            self.label.get(),
             self.bbs.iter().map(|bb| bb.to_indented_string(true)).join("\n")
         )
     }
@@ -198,7 +184,7 @@ impl fmt::Display for IR<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}\n\ndata:\n{}",
+            "{}\n\n[data]\n{}",
             self.functions.iter().join("\n"),
             self.data_section.iter().join("\n")
         )
@@ -213,12 +199,12 @@ fn build_and_print_ir() {
     let arena = Bump::new();
 
     let callvalue = IRStatement::Assignment(IRAssignment {
-        to: IRVariable(2),
+        to: IRVariable::new(2),
         expr: IRExpr::Call(IRCall { opcode: "callvalue", operands: &mut [] }),
     });
     let sstore = IRStatement::Call(IRCall {
         opcode: "sstore",
-        operands: arena.alloc([uint!(3U256).into(), IRVariable(2).into()]),
+        operands: arena.alloc([uint!(3U256).into(), IRVariable::new(2).into()]),
     });
     let revert = IRStatement::Call(IRCall {
         opcode: "revert",
@@ -226,7 +212,7 @@ fn build_and_print_ir() {
     });
 
     let bb = IRBasicBlock {
-        label: IRLabel(1),
+        label: IRLabel::new(1),
         statements: {
             let mut stmts = BVec::new_in(&arena);
             stmts.extend([callvalue, sstore, revert]);
@@ -235,7 +221,7 @@ fn build_and_print_ir() {
     };
 
     let basic_fn = IRFunction {
-        label: IRLabel(1),
+        label: IRLabel::new(1),
         bbs: {
             let mut bbs = BVec::with_capacity_in(1, &arena);
             bbs.push(bb);
